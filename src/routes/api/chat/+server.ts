@@ -1,6 +1,6 @@
 import AIChat from '$lib/services/AIChat/AIChat';
 import { chatMessageSchema } from '$lib/types/Chat/ChatMessage';
-import { json, type RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -8,7 +8,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	const messageArr = z.array(chatMessageSchema).parse(messageArrRaw);
 
 	const aiChat = new AIChat();
-	const messageReply = await aiChat.chat(messageArr);
+	const stream = await aiChat.chat(messageArr);
 
-	return json(messageReply);
+	return new Response(stream, {
+		headers: {
+			'content-type': 'text/event-stream'
+		}
+	});
 };

@@ -70,7 +70,7 @@ export default class AIChat {
 		return response.content;
 	}
 
-	async chatStream(messages: ChatMessage[]) {
+	chatStream(messages: ChatMessage[]) {
 		const chatMessages: BaseMessage[] = messages.map((message) => {
 			if (message.name === 'A.U.R.O.R.A') {
 				return new AIMessage({ content: message.content });

@@ -26,7 +26,22 @@
 
 		currentMessage = "";
 
-		const { data: messageReply } = await axios.post("/api/chat", messages);
+		// const { data: messageReply } = await axios.post("/api/chat", messages);
+		const response = await fetch("/api/chat", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(messages),
+		})
+		if (response.body) {
+			const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+			while (true) {
+				const {value, done} = await reader.read();
+				if (done) break;
+				console.log('Received: ', value);
+			}
+		}
 
 		// Audio
 		// const response = await fetch('/api/text-to-speech', {
@@ -52,7 +67,7 @@
 
 		messages.push({
 			id: crypto.randomUUID(),
-			content: messageReply,
+			content: "",
 			name: "A.U.R.O.R.A",
 			timestamp: new Date(),
 		});
