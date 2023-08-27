@@ -57,15 +57,7 @@ export default class AIChat {
 		});
 		chatMessages.unshift(new SystemMessage({ content: systemMessage }));
 
-		const response = await this.chatModel.call(chatMessages, {
-			callbacks: [
-				{
-					handleLLMNewToken(token: string) {
-						console.log(token);
-					}
-				}
-			]
-		});
+		const response = await this.chatModel.call(chatMessages);
 
 		return response.content;
 	}
@@ -81,8 +73,8 @@ export default class AIChat {
 		chatMessages.unshift(new SystemMessage({ content: systemMessage }));
 
 		const stream = new ReadableStream({
-			start: (controller) => {
-				this.chatModel.call(chatMessages, {
+			start: async (controller) => {
+				await this.chatModel.call(chatMessages, {
 					callbacks: [
 						{
 							handleLLMNewToken(token: string) {
@@ -91,6 +83,7 @@ export default class AIChat {
 						}
 					]
 				});
+				controller.close();
 			}
 		});
 

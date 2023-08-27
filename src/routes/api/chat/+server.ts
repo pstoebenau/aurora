@@ -8,7 +8,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const messageArr = z.array(chatMessageSchema).parse(messageArrRaw);
 
 	const aiChat = new AIChat();
-	const stream = await aiChat.chat(messageArr);
+	const stream = aiChat.chatStream(messageArr);
 
 	return new Response(stream, {
 		headers: {

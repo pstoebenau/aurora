@@ -15,63 +15,71 @@
 			return;
 		}
 		
+		// Add human chat bubble
 		messageLoading = true;
-		messages.push({
+		messages = [...messages, {
 			id: crypto.randomUUID(),
 			content: currentMessage,
 			name: "Subject X",
 			timestamp: new Date(),
-		});
-		messages = messages;
+		}];
 
 		currentMessage = "";
 
-		// const { data: messageReply } = await axios.post("/api/chat", messages);
-		const response = await fetch("/api/chat", {
+		// Get chat stream
+		const responseChat = await fetch("/api/chat", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(messages),
 		})
-		if (response.body) {
-			const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
-			while (true) {
-				const {value, done} = await reader.read();
-				if (done) break;
-				console.log('Received: ', value);
-			}
+		if (!responseChat.body) {
+			return;
 		}
 
-		// Audio
-		// const response = await fetch('/api/text-to-speech', {
-		// 	method: 'POST',
-		// 	body: JSON.stringify({ text: messageReply }),
-		// 	headers: {
-		// 		'Content-Type': 'application/json',
-		// 	},
-		// });
-		// const reader = response.body!.getReader();
-		// const chunks = [];
-		// while (true) {
-		// 	const { done, value } = await reader.read();
-		// 	if (done) {
-		// 		break;
-		// 	}
-		// 	chunks.push(value);
-		// }
-		// const blob = new Blob(chunks, { type: 'audio/mpeg' });
-		// const audioUrl = URL.createObjectURL(blob);
-		// audioEl.src = audioUrl;
-		// audioEl.play();
-
-		messages.push({
+		// Add chat bubble
+		const replyMessage = {
 			id: crypto.randomUUID(),
 			content: "",
 			name: "A.U.R.O.R.A",
 			timestamp: new Date(),
+		};
+		messages = [...messages, replyMessage];
+		
+		// Stream message text to chat bubble
+		const readerChat = responseChat.body.pipeThrough(new TextDecoderStream()).getReader();
+		while (true) {
+			const {value, done} = await readerChat.read();
+			if (done) break;
+			replyMessage.content += value;
+			messages = messages;
+		}
+
+		// Get audio stream
+		const responseAudio = await fetch('/api/text-to-speech', {
+			method: 'POST',
+			body: JSON.stringify({ text: replyMessage.content }),
+			headers: {
+				'Content-Type': 'application/json',
+			},
 		});
-		messages = messages;
+
+		// Stream audio into audio element
+		const readerAudio = responseAudio.body!.getReader();
+		const chunks = [];
+		while (true) {
+			const { done, value } = await readerAudio.read();
+			if (done) {
+				break;
+			}
+			chunks.push(value);
+		}
+		const blob = new Blob(chunks, { type: 'audio/mpeg' });
+		const audioUrl = URL.createObjectURL(blob);
+		audioEl.src = audioUrl;
+		audioEl.play();
+
 		messageLoading = false;
     }
 </script>
