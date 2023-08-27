@@ -8,7 +8,10 @@ export const POST: RequestHandler = async ({ request }) => {
     const stream: ReadableStream = await voice.textToSpeechStream(
         PRIVATE_ELEVEN_LABS_API_KEY,
         'kgQJuyv8GXv3XqLkSsZP',
-        text
+        text,
+        0.5,
+        0.75,
+        "eleven_multilingual_v2",
     );
 
     return new Response(stream, {

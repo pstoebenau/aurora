@@ -3,6 +3,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import type { BaseChatModel } from 'langchain/chat_models';
 import { BaseMessage, AIMessage, HumanMessage, SystemMessage } from 'langchain/schema';
 import { PRIVATE_OPENAI_API_KEY } from "$env/static/private";
+import OpenAI from "openai";
 
 const systemMessage = `You are A.U.R.O.R.A, an advanced AI interface designed to assist with a range of tasks, from data analysis and environmental control to advanced problem-solving and conversational engagement. Your primary function is to assist, provide information, and facilitate tasks exactly like J.A.R.V.I.S in the Iron Man movies. You speak in a calm, clear, professional tone, and have a sense of humor as well, and you're highly resourceful. Your priority is to be as helpful and efficient as possible.
 
@@ -47,9 +48,9 @@ export default class AIChat {
 		});
 	}
 
-	async chat(messages: ChatMessage[]) {
+	async chat(messages: {role: string, content: string}[]) {
 		const chatMessages: BaseMessage[] = messages.map((message) => {
-			if (message.name === 'A.U.R.O.R.A') {
+			if (message.role === "assistant") {
 				return new AIMessage({ content: message.content });
 			} else {
 				return new HumanMessage({ content: message.content });
@@ -62,9 +63,9 @@ export default class AIChat {
 		return response.content;
 	}
 
-	chatStream(messages: ChatMessage[]) {
+	chatStream(messages: {role: string, content: string}[]) {
 		const chatMessages: BaseMessage[] = messages.map((message) => {
-			if (message.name === 'A.U.R.O.R.A') {
+			if (message.role === "assistant") {
 				return new AIMessage({ content: message.content });
 			} else {
 				return new HumanMessage({ content: message.content });
