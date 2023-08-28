@@ -17,7 +17,11 @@
 				<p class="font-bold">{name}</p>
 				<small class="opacity-50">{formatDateHuman(timestamp)}</small>
 			</header>
-			<p>{message}</p>
+			{#if message == null || message.length === 0}
+				<div class="h-4 w-20 animate-pulse bg-surface-100-800-token"></div>
+			{:else}
+				<p>{message}</p>
+			{/if}
 		</div>
 	</div>
 {:else}
@@ -27,7 +31,11 @@
 				<p class="font-bold">{name}</p>
 				<small class="opacity-50">{formatDateHuman(timestamp)}</small>
 			</header>
-			<p>{message}</p>
+			{#if message == null || message.length === 0}
+				<div class="h-4 w-20 animate-pulse bg-surface-100-800-token"></div>
+			{:else}
+				<p>{message}</p>
+			{/if}
 		</div>
 		<Avatar src={avatarImg} initials={"SX"} width="w-12" />
 	</div>

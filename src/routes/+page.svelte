@@ -9,10 +9,10 @@
 	let messages: ChatMessage[] = [];
 	let currentMessage: string;
 	let messageLoading = false;
-	let audioStreamQueue: ReadableStream[] = [];
-	let audioEl: HTMLAudioElement;
+	let audioStreamQueue: (ReadableStream | null)[] = [];
 	let speechAudioElements: Record<string, HTMLAudioElement> = {};
-	let totalAudioCount = 0;
+	let audioChunkCount = 0;
+	let audioChunkFetching = 0;
 
 	async function sendMessage() {
 		if (messageLoading) {
@@ -42,20 +42,19 @@
 		
 		// Setup media stream
 		await tick();
-		// readAudioStreamQueue(speechAudioElements[replyMessage.id]);
-		readAudioStreamQueue(audioEl);
+		readAudioStreamQueue(speechAudioElements[replyMessage.id]);
 		
 		// Get chat stream
 		const chatStream = await getChatStream(messages);
 		// Stream message text to chat bubble
 		const readerChat = chatStream.pipeThrough(new TextDecoderStream()).getReader();
 		let currentSentence = "";
-		let sentenceCount = 0;
+		audioChunkCount = 0;
 		while (true) {
 			const {value, done} = await readerChat.read();
 			if (done) {
 				if (currentSentence != "") {
-					loadVoiceAudio(currentSentence, sentenceCount++);
+					loadVoiceAudio(currentSentence, audioChunkCount++);
 				}
 				break;
 			}
@@ -63,10 +62,10 @@
 			messages = messages;
 			const sentenceTerminatorRegex = /([.!?])/;
 			// Stream voice for each sentence
-			if (sentenceTerminatorRegex.test(value) && currentSentence.length > 25) {
+			if (sentenceTerminatorRegex.test(value) && currentSentence.length > 50) {
 				const split = value.split(sentenceTerminatorRegex)
 				currentSentence += split[0] + split[1];
-				loadVoiceAudio(currentSentence, sentenceCount++);
+				loadVoiceAudio(currentSentence, audioChunkCount++);
 				currentSentence = split[2].trim() ?? "";
 			}
 			else {
@@ -78,9 +77,17 @@
     }
 
 	async function loadVoiceAudio(text: string, index: number) {
+		audioStreamQueue[index] = null;
+		
+		// Limit number of request to 1 at a time
+		while (index !== 0 && audioStreamQueue[index-1] == null) {
+			await timeout(50);
+		}
+		
 		// Get audio stream
-		totalAudioCount++;
+		audioChunkFetching++;
 		const audioStream = await getAudioStream(text);
+		audioChunkFetching--;
 
 		// Add to queue
 		audioStreamQueue[index] = audioStream;
@@ -102,17 +109,17 @@
 		}
 
 		// Stream each audio stream chunk sequentially
-		for(let currentIndex = 0; currentIndex < totalAudioCount; currentIndex++) {
+		for(let currentIndex = 0; currentIndex < audioChunkCount; currentIndex++) {
 			// Wait for stream to come in
 			while(audioStreamQueue[currentIndex] == null) {
 				console.log(currentIndex);
 				await timeout(50);
 			}
 
-			console.log("Playing audio " + currentIndex);
+			console.log("Loading audio chunk " + currentIndex);
 			
 			// Enqueue
-			const audioStream = audioStreamQueue.pop() as ReadableStream;
+			const audioStream = audioStreamQueue[currentIndex] as ReadableStream;
 			
 			// Stream audio to buffer
 			const readerAudio = audioStream.getReader();
@@ -121,6 +128,7 @@
 				if (done) break;
 				
 				sourceBuffer.appendBuffer(value);
+				console.log("Appending audio data " + currentIndex);
 				
 				await new Promise(resolve => {
 					sourceBuffer.addEventListener("updateend", resolve, { once: true });
@@ -128,6 +136,8 @@
 			}
 		}
 
+		audioChunkCount = 0
+		audioStreamQueue = [];
 		mediaSource.endOfStream();
 	}
 
@@ -177,11 +187,10 @@
 					timestamp={message.timestamp}
 					type={message.name === 'A.U.R.O.R.A' ? 'guest' : 'host'}
 				/>
-				<audio bind:this={speechAudioElements[message.id]} controls></audio>
+				<audio bind:this={speechAudioElements[message.id]} hidden></audio>
 			</div>
 		{/each}
 	</div>
-	<audio bind:this={audioEl} controls></audio>
     <form on:submit|preventDefault={sendMessage} class="w-full">
         <div class="input-group input-group-divider grid-cols-[1fr_auto] rounded-container-token">
 			<input
