@@ -1,5 +1,4 @@
 import AIChat from '$lib/services/AIChat/AIChat';
-import { chatMessageSchema } from '$lib/types/Chat/ChatMessage';
 import type { RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 
