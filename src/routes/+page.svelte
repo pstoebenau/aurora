@@ -179,7 +179,11 @@
 <div class="container overflow-auto h-full mx-auto flex flex-col justify-end items-center gap-8 p-8">
 	<div class="flex flex-col gap-4 w-full">
 		{#each messages as message, i (message.id)}
-			<div transition:fade class="{message.name === 'A.U.R.O.R.A' ? "self-start" : "self-end"}">
+			<button
+				transition:fade
+				class="{message.name === 'A.U.R.O.R.A' ? "self-start" : "self-end"}"
+				on:click={() => speechAudioElements[message.id].play()}
+			>
 				<ChatBubble
 					avatarImg={message.name === 'A.U.R.O.R.A' ? '/images/aurora.jpg' : ''}
 					message={message.content}
@@ -188,7 +192,7 @@
 					type={message.name === 'A.U.R.O.R.A' ? 'guest' : 'host'}
 				/>
 				<audio bind:this={speechAudioElements[message.id]} hidden></audio>
-			</div>
+			</button>
 		{/each}
 	</div>
     <form on:submit|preventDefault={sendMessage} class="w-full">

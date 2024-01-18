@@ -20,7 +20,7 @@
 			{#if message == null || message.length === 0}
 				<div class="h-4 w-20 animate-pulse bg-surface-100-800-token"></div>
 			{:else}
-				<p class="whitespace-pre">{message}</p>
+				<p class="text-left whitespace-pre">{message}</p>
 			{/if}
 		</div>
 	</div>
@@ -34,7 +34,7 @@
 			{#if message == null || message.length === 0}
 				<div class="h-4 w-20 animate-pulse bg-surface-100-800-token"></div>
 			{:else}
-				<p class="whitespace-pre">{message}</p>
+				<p class="text-left whitespace-pre">{message}</p>
 			{/if}
 		</div>
 		<Avatar src={avatarImg} initials={"SX"} width="w-12" />
